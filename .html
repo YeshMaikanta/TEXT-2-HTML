@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Builder with Console Tab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --border: #e5e7eb;
+            --radius: 12px;
+            --console-bg: #1e1e1e; /* VS Code Dark */
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 1.5rem;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .btn-copy {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover { background-color: var(--primary-hover); }
+
+        /* --- Main Layout --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 45% 55%; /* Editor narrower, Preview wider */
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- LEFT: Editor --- */
+        .editor-pane {
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-right: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Controls */
+        .control-section {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .slider-row label { flex: 0 0 100px; font-size: 0.85rem; }
+        input[type="range"] { flex: 1; cursor: pointer; }
+        
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+        .tool-btn {
+            width: 32px; height: 32px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #4b5563;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+        .tool-btn:hover { background: #eff6ff; color: var(--primary); border-color: #bfdbfe; }
+
+        /* Editor Input */
+        #richEditor {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 250px;
+            flex: 1;
+            outline: none;
+            line-height: 1.6;
+        }
+        #richEditor:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+
+        /* --- RIGHT: Preview & Console --- */
+        .right-pane {
+            background: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Tabs */
+        .tabs-header {
+            display: flex;
+            background: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #64748b;
+            border-right: 1px solid #cbd5e1;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn.active {
+            background: #f1f5f9;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary); /* Visual indicator */
+            font-weight: 600;
+            background: white; /* Connect to content */
+        }
+        .tab-btn:hover:not(.active) { background: #ecf0f5; }
+
+        /* Tab Content Area */
+        .tab-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden; /* Hide scrollbars of container */
+            display: none; /* Hidden by default */
+        }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        /* Visual Preview Specifics */
+        #visual-tab {
+            background: white;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        #visualPreviewWrapper {
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            background: white;
+        }
+
+        /* Console Tab Specifics */
+        #console-tab {
+            background: var(--console-bg);
+            color: #d4d4d4;
+        }
+        
+        .console-header {
+            background: #252526;
+            padding: 8px 15px;
+            font-size: 0.8rem;
+            color: #9cdcfe;
+            border-bottom: 1px solid #333;
+            font-family: 'Inter', sans-serif;
+            display: flex; justify-content: space-between;
+        }
+
+        textarea#codeOutput {
+            flex: 1;
+            background: var(--console-bg);
+            color: #ce9178; /* HTML Tag Color style */
+            border: none;
+            resize: none;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            outline: none;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <i class="ph ph-terminal-window" style="font-size: 24px; color: var(--primary);"></i>
+        <span>LiveBuilder</span>
+    </div>
+    <button class="btn-copy" onclick="copyCode()">
+        <i class="ph ph-copy"></i> Copy Code
+    </button>
+</header>
+
+<div class="main-container">
+    
+    <div class="editor-pane">
+        
+        <div class="control-section">
+            <div class="section-label">Layout Config</div>
+            <div class="slider-row">
+                <label>Top Pad:</label>
+                <input type="range" id="paddingTop" min="0" max="100" value="40" oninput="updatePreview()">
+                <span id="paddingTopVal" style="font-size: 12px; width: 30px;">40</span>
+            </div>
+            <div class="slider-row">
+                <label>Bottom Pad:</label>
+                <input type="range" id="paddingBottom" min="0" max="100" value="40" oninput="updatePreview()">
+                <span id="paddingBottomVal" style="font-size: 12px; width: 30px;">40</span>
+            </div>
+            <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="includeSeparator" onchange="updatePreview()">
+                <label for="includeSeparator" style="font-size: 0.9rem;">Add Separator Line</label>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="section-label">Content</div>
+            <div class="toolbar">
+                <button class="tool-btn" onclick="format('bold')"><i class="ph ph-text-b"></i></button>
+                <button class="tool-btn" onclick="format('italic')"><i class="ph ph-text-italic"></i></button>
+                <button class="tool-btn" onclick="format('underline')"><i class="ph ph-text-underline"></i></button>
+                <div style="width:1px; background:#ddd; margin:0 4px;"></div>
+                <button class="tool-btn" onclick="format('justifyLeft')"><i class="ph ph-text-align-left"></i></button>
+                <button class="tool-btn" onclick="format('justifyCenter')"><i class="ph ph-text-align-center"></i></button>
+                <div style="width:1px; background:#ddd; margin:0 4px;"></div>
+                <button class="tool-btn" onclick="format('insertUnorderedList')"><i class="ph ph-list-bullets"></i></button>
+                <button class="tool-btn" onclick="addLink()"><i class="ph ph-link"></i></button>
+                <button class="tool-btn" onclick="addImage()"><i class="ph ph-image"></i></button>
+                <button class="tool-btn" onclick="format('removeFormat')"><i class="ph ph-eraser"></i></button>
+            </div>
+            <div id="richEditor" contenteditable="true" oninput="updatePreview()">
+                <p>Enter your <b>custom text</b> here.</p>
+                <p>Check the "Console" tab to see the live code generation!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-pane">
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="switchTab('visual', this)">
+                <i class="ph ph-eye"></i> Visual Preview
+            </button>
+            <button class="tab-btn" onclick="switchTab('console', this)">
+                <i class="ph ph-code"></i> Code Console
+            </button>
+        </div>
+
+        <div id="visual-tab" class="tab-content active">
+            <div id="visualPreviewWrapper">
+                <div id="visualPreview"></div>
+            </div>
+        </div>
+
+        <div id="console-tab" class="tab-content">
+            <div class="console-header">
+                <span>index.html (Read Only)</span>
+                <span style="opacity: 0.5;">UTF-8</span>
+            </div>
+            <textarea id="codeOutput" readonly spellcheck="false"></textarea>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Constants ---
+    const START_COMMENT = "";
+    const END_COMMENT = "";
+    const SEPARATOR_CODE = `
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+<tbody><tr>
+<td bgcolor="#ffffff" style="padding-left:30px; padding-right:30px;" class="mobile-side-padding-20">
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+<tbody><tr>
+<td height="1" bgcolor="#ffffff" style="mso-line-height-rule: exactly; line-height: 1px; font-size: 1px; padding-top:0px; padding-bottom:0px; padding-left:px; padding-right:px; border-top: 1px solid #A2A2A2;" class="mobile-side-padding-10"></td>
+</tr>
+</tbody></table>
+</td>
+</tr></tbody></table>
+`;
+
+    // --- Tab Switching Logic ---
+    function switchTab(tabName, btnElement) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        // Deactivate all buttons
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+        // Activate selected
+        document.getElementById(tabName + '-tab').classList.add('active');
+        btnElement.classList.add('active');
+    }
+
+    // --- Editor Commands ---
+    function format(command, value = null) {
+        document.execCommand(command, false, value);
+        updatePreview();
+    }
+
+    function addLink() {
+        const url = prompt("Enter URL:", "https://");
+        if (url) format('createLink', url);
+    }
+
+    function addImage() {
+        const url = prompt("Enter Image URL:", "https://");
+        if (url) {
+            const html = `<img src="${url}" style="max-width:100%; display:block; border:0; margin: 10px 0;" alt="">`;
+            document.execCommand('insertHTML', false, html);
+            updatePreview();
+        }
+    }
+
+    // --- Core Generation Logic ---
+    function updatePreview() {
+        const editor = document.getElementById('richEditor');
+        const paddingTop = document.getElementById('paddingTop').value;
+        const paddingBottom = document.getElementById('paddingBottom').value;
+        const includeSep = document.getElementById('includeSeparator').checked;
+
+        // UI Updates
+        document.getElementById('paddingTopVal').innerText = paddingTop;
+        document.getElementById('paddingBottomVal').innerText = paddingBottom;
+
+        let content = editor.innerHTML;
+
+        // Auto-Link Regex
+        const urlRegex = /(?<!href="|src=")(https?:\/\/[^\s<]+)/g;
+        content = content.replace(urlRegex, function(url) {
+            return `<a href="${url}">${url}</a>`;
+        });
+
+        // Enforce Link Colors
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        tempDiv.querySelectorAll('a').forEach(link => {
+            link.style.color = '#0067B8';
+            link.style.textDecoration = 'underline';
+            link.style.fontFamily = "'Segoe UI', Frutiger, 'Helvetica Neue', Arial, sans-serif";
+        });
+        const processedContent = tempDiv.innerHTML;
+
+        // Generate HTML
+        let finalHtml = `
+${START_COMMENT}
+<table width="100%" cellspacing="0" cellpadding="0" border="0"><tbody><tr><td bgcolor="#ffffff" align="center" style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding-top:${paddingTop}px; padding-bottom:${paddingBottom}px; padding-left:30px; padding-right:30px; text-align:left; letter-spacing:0.0em;" class="mobile-side-padding-20"><div style="Margin:0; padding:0; font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule:exactly; line-height:24px; color:#000000;text-align:left; letter-spacing:0.0em;">
+${processedContent}
+</div></td></tr></tbody></table>
+${END_COMMENT}`;
+
+        if (includeSep) {
+            finalHtml += `\n${SEPARATOR_CODE}`;
+        }
+
+        // 1. Update Visual Preview
+        document.getElementById('visualPreview').innerHTML = finalHtml;
+
+        // 2. Update Code Console Tab
+        document.getElementById('codeOutput').value = finalHtml.trim();
+
+        // 3. Update Browser Console (F12)
+        // This logs to the actual browser debugger console
+        console.clear();
+        console.log("%cLive HTML Preview:", "color: #2563eb; font-weight: bold; font-size: 12px;");
+        console.log(finalHtml.trim());
+    }
+
+    function copyCode() {
+        const codeBox = document.getElementById('codeOutput');
+        codeBox.select();
+        document.execCommand('copy');
+        
+        const btn = document.querySelector('.btn-copy');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+        btn.style.backgroundColor = '#10b981';
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.backgroundColor = '';
+        }, 2000);
+    }
+
+    // Init
+    updatePreview();
+</script>
+
+</body>
+</html>
