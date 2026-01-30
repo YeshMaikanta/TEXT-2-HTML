@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clean Email Builder</title>
+    <title>Strict Template Builder</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
     <style>
         :root {
-            --primary: #2563eb;
+            --primary: #0067B8; 
             --bg-body: #f3f4f6;
             --border: #e5e7eb;
-            --radius: 8px;
             --console-bg: #1e1e1e;
         }
+
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -26,31 +27,34 @@
             overflow: hidden;
         }
 
-        /* Header */
+        /* --- Header --- */
         header {
             background: #fff;
             border-bottom: 1px solid var(--border);
             padding: 0 1.5rem;
-            height: 50px;
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
+        .header-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+
         .btn-copy {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            font-weight: 500;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            display: flex; align-items: center; gap: 8px;
+            transition: background 0.2s;
         }
+        .btn-copy:hover { background-color: #005da6; }
 
-        /* Layout */
+        /* --- Main Layout --- */
         .main-container {
             display: grid;
             grid-template-columns: 45% 55%;
@@ -58,9 +62,9 @@
             overflow: hidden;
         }
 
-        /* Left: Editor */
+        /* --- Left: Editor --- */
         .editor-pane {
-            padding: 1rem;
+            padding: 1.5rem;
             background: #fff;
             border-right: 1px solid var(--border);
             display: flex;
@@ -69,67 +73,73 @@
             overflow-y: auto;
         }
 
+        /* Controls */
+        .controls {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
+
+        /* Toolbar */
         .toolbar {
             display: flex;
             gap: 5px;
+            flex-wrap: wrap;
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border);
         }
         
         .tool-btn {
             background: white;
-            border: 1px solid #ccc;
+            border: 1px solid #d1d5db;
             border-radius: 4px;
-            width: 30px; height: 30px;
+            width: 32px; height: 32px;
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            color: #333;
+            color: #374151;
+            font-size: 1.1rem;
         }
-        .tool-btn:hover { background: #f0f0f0; }
+        .tool-btn:hover { background: #eff6ff; color: var(--primary); border-color: var(--primary); }
 
+        /* Input Area */
         #richEditor {
             flex: 1;
             outline: none;
             line-height: 1.6;
-            font-size: 15px;
-            color: #333;
-        }
-
-        /* Controls */
-        .controls {
-            background: #f9fafb;
+            font-size: 16px;
+            color: #000;
             padding: 10px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
+            border: 1px solid transparent;
+            /* We simulate the output font in the editor visual only */
+            font-family: 'Segoe UI', Verdana, sans-serif;
         }
-        .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        input[type="range"] { flex: 1; }
+        #richEditor:focus { border-color: #e5e7eb; border-radius: 4px; }
 
-        /* Right: Preview/Code */
+        /* --- Right: Preview/Code --- */
         .right-pane {
             background: #f1f5f9;
             display: flex;
             flex-direction: column;
         }
 
-        .tabs {
-            display: flex;
-            background: #e2e8f0;
-        }
+        .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
         .tab-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             background: transparent;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #64748b;
         }
         .tab-btn.active {
             background: #fff;
             color: var(--primary);
-            border-top: 2px solid var(--primary);
+            border-top: 3px solid var(--primary);
         }
 
         .tab-content {
@@ -140,7 +150,7 @@
         }
         .tab-content.active { display: flex; flex-direction: column; }
 
-        /* Console */
+        /* Console Style */
         textarea#codeOutput {
             flex: 1;
             background: var(--console-bg);
@@ -152,19 +162,26 @@
             line-height: 1.5;
             resize: none;
             outline: none;
-            white-space: pre; /* Important for indentation */
+            white-space: pre; 
         }
 
-        /* Visual */
-        #visual-tab { padding: 20px; overflow-y: auto; }
-        #visualPreviewWrapper { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        /* Visual Style */
+        #visual-tab { padding: 30px; overflow-y: auto; }
+        #visualPreviewWrapper { 
+            background: white; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
+            border: 1px solid #e5e7eb;
+        }
 
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight:600; font-size:14px;">Clean Code Builder</div>
+    <div class="header-title">
+        <i class="ph ph-envelope-simple-open" style="color:var(--primary); font-size:24px;"></i>
+        Strict Email Builder
+    </div>
     <button class="btn-copy" onclick="copyCode()"><i class="ph ph-copy"></i> Copy HTML</button>
 </header>
 
@@ -173,32 +190,39 @@
     <div class="editor-pane">
         <div class="controls">
             <div class="slider-row">
-                <label>Top Space:</label>
-                <input type="range" id="paddingTop" min="0" max="100" value="40" oninput="updateFromVisual()">
-                <span id="ptVal">40</span>
+                <label style="width:100px;">Top Padding:</label>
+                <input type="range" id="paddingTop" min="0" max="100" value="40" oninput="update()">
+                <span id="ptVal" style="font-weight:600; font-size:12px; width:30px;">40</span>
             </div>
             <div class="slider-row">
-                <label>Bottom Space:</label>
-                <input type="range" id="paddingBottom" min="0" max="100" value="40" oninput="updateFromVisual()">
-                <span id="pbVal">40</span>
+                <label style="width:100px;">Bottom Padding:</label>
+                <input type="range" id="paddingBottom" min="0" max="100" value="40" oninput="update()">
+                <span id="pbVal" style="font-weight:600; font-size:12px; width:30px;">40</span>
             </div>
-            <div style="margin-top:5px;">
-                <input type="checkbox" id="sepCheck" onchange="updateFromVisual()"> <label>Add Separator</label>
+            <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" id="sepCheck" onchange="update()"> 
+                <label for="sepCheck" style="cursor:pointer;">Include Separator Line</label>
             </div>
         </div>
 
         <div class="toolbar">
-            <button class="tool-btn" onclick="format('bold')"><i class="ph ph-text-b"></i></button>
-            <button class="tool-btn" onclick="format('italic')"><i class="ph ph-text-italic"></i></button>
-            <button class="tool-btn" onclick="format('underline')"><i class="ph ph-text-underline"></i></button>
-            <button class="tool-btn" onclick="addLink()"><i class="ph ph-link"></i></button>
-            <button class="tool-btn" onclick="addImage()"><i class="ph ph-image"></i></button>
-            <button class="tool-btn" onclick="format('removeFormat')"><i class="ph ph-eraser"></i></button>
+            <button class="tool-btn" onclick="format('bold')" title="Bold"><i class="ph ph-text-b"></i></button>
+            <button class="tool-btn" onclick="format('italic')" title="Italic"><i class="ph ph-text-italic"></i></button>
+            <button class="tool-btn" onclick="format('underline')" title="Underline"><i class="ph ph-text-underline"></i></button>
+            <div style="width:1px; background:#ddd; height:20px; margin:auto 0;"></div>
+            <button class="tool-btn" onclick="format('insertUnorderedList')" title="List"><i class="ph ph-list-bullets"></i></button>
+            <button class="tool-btn" onclick="addLink()" title="Link"><i class="ph ph-link"></i></button>
+            <button class="tool-btn" onclick="addImage()" title="Image"><i class="ph ph-image"></i></button>
+            <div style="width:1px; background:#ddd; height:20px; margin:auto 0;"></div>
+            <button class="tool-btn" onclick="format('removeFormat')" title="Remove Formatting"><i class="ph ph-eraser"></i></button>
         </div>
 
-        <div id="richEditor" contenteditable="true" oninput="updateFromVisual()">
+        <div id="richEditor" contenteditable="true" oninput="update()">
             ENTER YOUR CUSTOM TEXT HERE
         </div>
+        <p style="font-size:12px; color:#666; margin-top:5px;">
+            * Fonts/Sizes pasted here will be stripped to match the strict template.
+        </p>
     </div>
 
     <div class="right-pane">
@@ -212,53 +236,35 @@
         </div>
 
         <div id="console-tab" class="tab-content">
-            <textarea id="codeOutput" spellcheck="false" oninput="updateFromCode()"></textarea>
+            <textarea id="codeOutput" spellcheck="false" readonly></textarea>
         </div>
     </div>
 
 </div>
 
 <script>
-    let isLocked = false;
-
-    // --- Template Parts ---
-    const TEMPLATE_TOP = (pt, pb) => `<table width="100%" cellspacing="0" cellpadding="0" border="0">
-  <tbody>
-    <tr>
-      <td bgcolor="#ffffff" align="center" style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding-top:${pt}px; padding-bottom:${pb}px; padding-left:30px; padding-right:30px; text-align:left; letter-spacing:0.0em;" class="mobile-side-padding-20">
-        <p style="Margin:0; padding:0; font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule:exactly; line-height:24px; color:#000000; text-align:left; letter-spacing:0.0em;">`;
-
-    const TEMPLATE_BOTTOM = `
-        </p>
-      </td>
-    </tr>
-  </tbody>
-</table>
+    // --- TEMPLATES ---
+    const TEMPLATE_WRAPPER = (pt, pb, content) => `<table width="100%" cellspacing="0" cellpadding="0" border="0"><tbody><tr><td bgcolor="#ffffff" align="center" style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding-top:${pt}px; padding-bottom:${pb}px; padding-left:30px; padding-right:30px; text-align:left; letter-spacing:0.0em;" class="mobile-side-padding-20"><p style="Margin:0; padding:0; font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule:exactly; line-height:24px; color:#000000;text-align:left; letter-spacing:0.0em;"><span style="font-family: &quot;Segoe UI&quot;, Frutiger, &quot;Helvetica Neue&quot;, Arial, sans-serif;font-size: 16px;">${content}</span></p></td></tr></tbody></table>
 `;
 
-    const SEPARATOR = `
+    const TEMPLATE_SEP = `
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
-  <tbody>
-    <tr>
-      <td bgcolor="#ffffff" style="padding-left:30px; padding-right:30px;" class="mobile-side-padding-20">
-        <table width="100%" cellspacing="0" cellpadding="0" border="0">
-          <tbody>
-            <tr>
-              <td height="1" bgcolor="#ffffff" style="mso-line-height-rule: exactly; line-height: 1px; font-size: 1px; padding-top:0px; padding-bottom:0px; padding-left:px; padding-right:px; border-top: 1px solid #A2A2A2;" class="mobile-side-padding-10"></td>
-            </tr>
-          </tbody>
-        </table>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<tbody><tr>
+<td bgcolor="#ffffff" style="padding-left:30px; padding-right:30px;" class="mobile-side-padding-20">
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+<tbody><tr>
+<td height="1" bgcolor="#ffffff" style="mso-line-height-rule: exactly; line-height: 1px; font-size: 1px; padding-top:0px; padding-bottom:0px; padding-left:px; padding-right:px; border-top: 1px solid #A2A2A2;" class="mobile-side-padding-10"></td>
+</tr>
+</tbody></table>
+</td>
+</tr></tbody></table>
 `;
 
-    // --- Formatting Logic ---
-    function format(cmd, val=null) { document.execCommand(cmd, false, val); updateFromVisual(); }
+    // --- ACTIONS ---
+    function format(cmd, val=null) { document.execCommand(cmd, false, val); update(); }
     function addLink() { const url=prompt("URL:"); if(url) format('createLink', url); }
-    function addImage() { const url=prompt("Img URL:"); if(url) { document.execCommand('insertHTML', false, `<br><img src="${url}" style="max-width:100%;"><br>`); updateFromVisual(); } }
-
+    function addImage() { const url=prompt("Image URL:"); if(url) { document.execCommand('insertHTML', false, `<br><img src="${url}" style="max-width:100%;"><br>`); update(); } }
+    
     function switchTab(t, btn) {
         document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
@@ -266,29 +272,55 @@
         btn.classList.add('active');
     }
 
-    // --- Simple Beautifier (Indenter) ---
-    function beautifyHTML(html) {
-        let formatted = '';
-        let pad = 0;
-        // Split by tags, but keep content
-        const lines = html.replace(/>\s*</g, '>\n<').split('\n');
-        
-        lines.forEach(line => {
-            if (line.match(/^<\/\w/)) pad -= 2; // Closing tag decreases indent
-            formatted += ' '.repeat(Math.max(0, pad)) + line + '\n';
-            if (line.match(/^<\w[^>]*[^\/]>.*$/) && !line.match(/^<\w[^>]*>.*<\/\w>.*$/)) {
-                // Opening tag that isn't self-closing and isn't a one-liner
-                pad += 2; 
+    // --- SANITIZER ENGINE ---
+    function sanitizeAndBuild(rawHTML) {
+        // 1. Create a dummy element to manipulate DOM
+        const temp = document.createElement('div');
+        temp.innerHTML = rawHTML;
+
+        // 2. Iterate over ALL elements to strip styles, but preserve structural tags
+        const allElements = temp.querySelectorAll('*');
+        allElements.forEach(el => {
+            // Strip ALL style attributes (removes fonts, colors, sizes)
+            // Exception: Images need max-width usually, but let's stick to strict rules
+            if (el.tagName !== 'IMG') {
+                el.removeAttribute('style');
+            }
+            
+            // Remove Classes and IDs
+            el.removeAttribute('class');
+            el.removeAttribute('id');
+
+            // 3. ENFORCE Link Color
+            if (el.tagName === 'A') {
+                el.style.color = '#0067B8';
+                el.style.textDecoration = 'underline';
+            }
+
+            // 4. Flatten Headers (h1, h2, etc) to Strong + BR
+            if (['H1','H2','H3','H4','H5','H6'].includes(el.tagName)) {
+                const bold = document.createElement('strong');
+                bold.innerHTML = el.innerHTML;
+                const br = document.createElement('br');
+                el.parentNode.replaceChild(bold, el);
+                bold.after(br);
             }
         });
-        return formatted.trim();
+
+        // 5. Flatten structure (Convert P and Divs to BRs)
+        // This ensures it fits inside the single <p><span> template structure
+        let cleanHTML = temp.innerHTML;
+        cleanHTML = cleanHTML.replace(/<p[^>]*>/gi, '<br><br>').replace(/<\/p>/gi, '');
+        cleanHTML = cleanHTML.replace(/<div[^>]*>/gi, '<br>').replace(/<\/div>/gi, '');
+        
+        // Remove duplicate/leading BRs
+        cleanHTML = cleanHTML.replace(/^(<br\s*\/?>)+/i, '');
+        
+        return cleanHTML;
     }
 
-    // --- Sync: Visual -> Code ---
-    function updateFromVisual() {
-        if(isLocked) return;
-        isLocked = true;
-
+    // --- MAIN UPDATE LOOP ---
+    function update() {
         const editor = document.getElementById('richEditor');
         const pt = document.getElementById('paddingTop').value;
         const pb = document.getElementById('paddingBottom').value;
@@ -297,75 +329,33 @@
         document.getElementById('ptVal').innerText = pt;
         document.getElementById('pbVal').innerText = pb;
 
-        // Process Content
         let content = editor.innerHTML;
-        
-        // 1. Clean dirty divs from contenteditable
-        content = content.replace(/<div>/gi, '<br>').replace(/<\/div>/gi, '');
-        
-        // 2. Auto Link
+
+        // Auto-Linkify text urls
         content = content.replace(/(?<!href="|src=")(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>');
 
-        // 3. Style Links
-        const temp = document.createElement('div');
-        temp.innerHTML = content;
-        temp.querySelectorAll('a').forEach(a => {
-            a.style.color = '#0067B8';
-            a.style.textDecoration = 'underline';
-        });
+        // Sanitize
+        const strictContent = sanitizeAndBuild(content);
 
-        // 4. Assemble
-        let rawHTML = TEMPLATE_TOP(pt, pb) + temp.innerHTML + TEMPLATE_BOTTOM;
-        if(useSep) rawHTML += '\n' + SEPARATOR;
+        // Build Final HTML
+        let finalCode = TEMPLATE_WRAPPER(pt, pb, strictContent);
+        if (useSep) finalCode += '\n' + TEMPLATE_SEP;
 
-        // 5. Beautify for Console
-        const prettyHTML = beautifyHTML(rawHTML);
-
-        document.getElementById('visualPreview').innerHTML = rawHTML;
-        document.getElementById('codeOutput').value = prettyHTML;
-
-        isLocked = false;
-    }
-
-    // --- Sync: Code -> Visual ---
-    function updateFromCode() {
-        if(isLocked) return;
-        isLocked = true;
-
-        const code = document.getElementById('codeOutput').value;
-        document.getElementById('visualPreview').innerHTML = code;
-
-        // Try to parse values back
-        try {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(code, 'text/html');
-            const mainTd = doc.querySelector('.mobile-side-padding-20');
-            if(mainTd) {
-                const pt = parseInt(mainTd.style.paddingTop) || 0;
-                const pb = parseInt(mainTd.style.paddingBottom) || 0;
-                document.getElementById('paddingTop').value = pt;
-                document.getElementById('paddingBottom').value = pb;
-                document.getElementById('ptVal').innerText = pt;
-                document.getElementById('pbVal').innerText = pb;
-
-                // Grab content inside the <p>
-                const pTag = mainTd.querySelector('p');
-                if(pTag) document.getElementById('richEditor').innerHTML = pTag.innerHTML;
-            }
-            document.getElementById('sepCheck').checked = code.includes('');
-        } catch(e) {}
-
-        isLocked = false;
+        // Render
+        document.getElementById('visualPreview').innerHTML = finalCode;
+        document.getElementById('codeOutput').value = finalCode;
     }
 
     function copyCode() {
         document.getElementById('codeOutput').select();
         document.execCommand('copy');
-        alert("Simple HTML Copied!");
+        const btn = document.querySelector('.btn-copy');
+        btn.innerHTML = "Copied!";
+        setTimeout(()=> btn.innerHTML = '<i class="ph ph-copy"></i> Copy HTML', 2000);
     }
 
-    // Start
-    updateFromVisual();
+    // Init
+    update();
 </script>
 
 </body>
