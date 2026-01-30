@@ -3,251 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strict Template Builder</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
+    <title>Email HTML Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --primary: #0067B8; 
-            --bg-body: #f3f4f6;
-            --border: #e5e7eb;
-            --console-bg: #1e1e1e;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: var(--bg-body);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- Header --- */
-        header {
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-            padding: 0 1.5rem;
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px; }
-
-        .btn-copy {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            transition: background 0.2s;
-        }
-        .btn-copy:hover { background-color: #005da6; }
-
-        /* --- Main Layout --- */
-        .main-container {
-            display: grid;
-            grid-template-columns: 45% 55%;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* --- Left: Editor --- */
-        .editor-pane {
-            padding: 1.5rem;
-            background: #fff;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            overflow-y: auto;
-        }
-
-        /* Controls */
-        .controls {
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-        .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--primary); }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-        }
+        body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
         
-        .tool-btn {
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            width: 32px; height: 32px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            color: #374151;
-            font-size: 1.1rem;
-        }
-        .tool-btn:hover { background: #eff6ff; color: var(--primary); border-color: var(--primary); }
-
-        /* Input Area */
-        #richEditor {
-            flex: 1;
+        #editor {
+            min-height: 300px;
             outline: none;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 16px;
-            color: #000;
-            padding: 10px;
-            border: 1px solid transparent;
-            /* We simulate the output font in the editor visual only */
-            font-family: 'Segoe UI', Verdana, sans-serif;
-        }
-        #richEditor:focus { border-color: #e5e7eb; border-radius: 4px; }
-
-        /* --- Right: Preview/Code --- */
-        .right-pane {
-            background: #f1f5f9;
-            display: flex;
-            flex-direction: column;
+            line-height: 24px;
+            color: #000000;
+            background: white;
+            padding: 24px;
         }
 
-        .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
-        .tab-btn {
-            padding: 12px 24px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #64748b;
-        }
-        .tab-btn.active {
-            background: #fff;
-            color: var(--primary);
-            border-top: 3px solid var(--primary);
-        }
+        /* Enforce tight spacing in editor */
+        #editor p, #editor div { margin: 0; padding: 0; line-height: 24px; }
+        #editor ul, #editor ol { margin: 12px 0 12px 30px; padding: 0; }
+        #editor li { margin-bottom: 4px; }
+        #editor a { color: #0067B8 !important; text-decoration: underline; }
 
-        .tab-content {
-            flex: 1;
-            display: none;
-            overflow: hidden;
-            position: relative;
+        .tool-btn {
+            @apply p-2 w-10 h-10 flex items-center justify-center hover:bg-slate-100 rounded text-slate-600 transition-all;
         }
-        .tab-content.active { display: flex; flex-direction: column; }
-
-        /* Console Style */
-        textarea#codeOutput {
-            flex: 1;
-            background: var(--console-bg);
-            color: #9cdcfe;
-            border: none;
-            padding: 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            resize: none;
-            outline: none;
-            white-space: pre; 
-        }
-
-        /* Visual Style */
-        #visual-tab { padding: 30px; overflow-y: auto; }
-        #visualPreviewWrapper { 
-            background: white; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            border: 1px solid #e5e7eb;
-        }
-
+        .tool-btn:active { @apply bg-slate-200; }
     </style>
+    <!-- Chosen Palette: Clean Professional (Slate 800 for headers, Blue 600 for actions) -->
+    <!-- Application Structure Plan: Single-page utility. Uses a selection-saving mechanism to ensure hyperlinks work across all browsers. Normalizes internal margins to prevent 'double-spacing' in Outlook. -->
+    <!-- Visualization & Content Choices: Clean UI. Text manipulation focuses on inline style injection for email compatibility. Confirming NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
-<body>
+<body class="p-4 md:p-10">
 
-<header>
-    <div class="header-title">
-        <i class="ph ph-envelope-simple-open" style="color:var(--primary); font-size:24px;"></i>
-        Strict Email Builder
-    </div>
-    <button class="btn-copy" onclick="copyCode()"><i class="ph ph-copy"></i> Copy HTML</button>
-</header>
-
-<div class="main-container">
-    
-    <div class="editor-pane">
-        <div class="controls">
-            <div class="slider-row">
-                <label style="width:100px;">Top Padding:</label>
-                <input type="range" id="paddingTop" min="0" max="100" value="40" oninput="update()">
-                <span id="ptVal" style="font-weight:600; font-size:12px; width:30px;">40</span>
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Text to HTML Formatter</h1>
+                <p class="text-slate-500 text-sm">Strict Rule Enforcement: Segoe UI 16px | Link Color #0067B8</p>
             </div>
-            <div class="slider-row">
-                <label style="width:100px;">Bottom Padding:</label>
-                <input type="range" id="paddingBottom" min="0" max="100" value="40" oninput="update()">
-                <span id="pbVal" style="font-weight:600; font-size:12px; width:30px;">40</span>
-            </div>
-            <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                <input type="checkbox" id="sepCheck" onchange="update()"> 
-                <label for="sepCheck" style="cursor:pointer;">Include Separator Line</label>
-            </div>
-        </div>
+            <button onclick="clearAll()" class="text-xs font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest transition-colors">Clear All</button>
+        </header>
 
-        <div class="toolbar">
-            <button class="tool-btn" onclick="format('bold')" title="Bold"><i class="ph ph-text-b"></i></button>
-            <button class="tool-btn" onclick="format('italic')" title="Italic"><i class="ph ph-text-italic"></i></button>
-            <button class="tool-btn" onclick="format('underline')" title="Underline"><i class="ph ph-text-underline"></i></button>
-            <div style="width:1px; background:#ddd; height:20px; margin:auto 0;"></div>
-            <button class="tool-btn" onclick="format('insertUnorderedList')" title="List"><i class="ph ph-list-bullets"></i></button>
-            <button class="tool-btn" onclick="addLink()" title="Link"><i class="ph ph-link"></i></button>
-            <button class="tool-btn" onclick="addImage()" title="Image"><i class="ph ph-image"></i></button>
-            <div style="width:1px; background:#ddd; height:20px; margin:auto 0;"></div>
-            <button class="tool-btn" onclick="format('removeFormat')" title="Remove Formatting"><i class="ph ph-eraser"></i></button>
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left: Workspace -->
+            <div class="flex flex-col gap-4">
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                    <!-- Toolbar -->
+                    <div class="bg-slate-50 border-b border-slate-200 p-2 flex flex-wrap gap-1 items-center">
+                        <button onclick="cmd('bold')" class="tool-btn" title="Bold"><i class="fa-solid fa-bold"></i></button>
+                        <button onclick="cmd('italic')" class="tool-btn" title="Italic"><i class="fa-solid fa-italic"></i></button>
+                        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                        <button onclick="cmd('insertUnorderedList')" class="tool-btn" title="Bullets"><i class="fa-solid fa-list-ul"></i></button>
+                        <button onclick="cmd('insertOrderedList')" class="tool-btn" title="Numbers"><i class="fa-solid fa-list-ol"></i></button>
+                        <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                        <button onclick="makeLink()" class="flex items-center gap-2 px-4 h-10 hover:bg-slate-100 rounded text-sm font-bold text-blue-600">
+                            <i class="fa-solid fa-link"></i> Hyperlink
+                        </button>
+                    </div>
 
-        <div id="richEditor" contenteditable="true" oninput="update()">
-            ENTER YOUR CUSTOM TEXT HERE
+                    <!-- Input Area -->
+                    <div id="editor" contenteditable="true" spellcheck="false">Start typing or paste your text here...</div>
+                    
+                    <!-- Controls -->
+                    <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <input type="checkbox" id="sepToggle" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">Include Separator Line</span>
+                        </label>
+                        
+                        <button onclick="generate()" class="bg-[#0067B8] hover:bg-blue-700 text-white px-8 py-2.5 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2">
+                            Generate HTML <i class="fa-solid fa-code text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-400 italic">
+                    Note: Paste cleanup is active. External font sizes will be stripped to maintain 16px standard.
+                </div>
+            </div>
+
+            <!-- Right: Production Output -->
+            <div class="flex flex-col gap-4 h-full">
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full min-h-[500px]">
+                    <div class="flex border-b border-slate-200">
+                        <button id="tab-p" onclick="switchTab('preview')" class="flex-1 py-3 text-xs font-black uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30">Preview</button>
+                        <button id="tab-c" onclick="switchTab('code')" class="flex-1 py-3 text-xs font-black uppercase tracking-widest text-slate-400">Source Code</button>
+                    </div>
+
+                    <div class="flex-grow p-6 bg-slate-100 relative overflow-hidden">
+                        <!-- Preview Container -->
+                        <div id="view-preview" class="h-full overflow-auto bg-white border border-slate-200 rounded p-1">
+                            <div id="render-target"></div>
+                        </div>
+                        
+                        <!-- Code Container -->
+                        <div id="view-code" class="hidden h-full">
+                            <textarea id="code-box" readonly class="w-full h-full p-4 font-mono text-[11px] bg-slate-900 text-blue-300 rounded border-none focus:ring-0" placeholder="HTML will appear here..."></textarea>
+                            <button onclick="copyToClipboard()" id="copy-btn" class="absolute bottom-10 right-10 bg-white text-slate-800 text-xs font-bold py-2.5 px-6 rounded-lg shadow-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center gap-2">
+                                <i class="fa-regular fa-copy"></i> COPY HTML
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p style="font-size:12px; color:#666; margin-top:5px;">
-            * Fonts/Sizes pasted here will be stripped to match the strict template.
-        </p>
     </div>
 
-    <div class="right-pane">
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('visual', this)">Preview</button>
-            <button class="tab-btn" onclick="switchTab('console', this)">Code Console</button>
-        </div>
+    <script>
+        const editor = document.getElementById('editor');
+        const sepToggle = document.getElementById('sepToggle');
+        
+        // RULE TEMPLATES
+        const RULE_1_TOP = `<!-- Begin custome text Section -->
+<table width="100%" cellspacing="0" cellpadding="0" border="0"><tbody><tr><td bgcolor="#ffffff" align="center" style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding-top:40px; padding-bottom:40px; padding-left:30px; padding-right:30px; text-align:left; letter-spacing:0.0em;" class="mobile-side-padding-20"><p style="Margin:0; padding:0; font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule:exactly; line-height:24px; color:#000000;text-align:left; letter-spacing:0.0em;"><span style="font-family: &quot;Segoe UI&quot;, Frutiger, &quot;Helvetica Neue&quot;, Arial, sans-serif;font-size: 16px;">`;
 
-        <div id="visual-tab" class="tab-content active">
-            <div id="visualPreviewWrapper"><div id="visualPreview"></div></div>
-        </div>
+        const RULE_1_BOTTOM = `</span></p></td></tr></tbody></table>
+<!-- End custom text Section -->`;
 
-        <div id="console-tab" class="tab-content">
-            <textarea id="codeOutput" spellcheck="false" readonly></textarea>
-        </div>
-    </div>
-
-</div>
-
-<script>
-    // --- TEMPLATES ---
-    const TEMPLATE_WRAPPER = (pt, pb, content) => `<table width="100%" cellspacing="0" cellpadding="0" border="0"><tbody><tr><td bgcolor="#ffffff" align="center" style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding-top:${pt}px; padding-bottom:${pb}px; padding-left:30px; padding-right:30px; text-align:left; letter-spacing:0.0em;" class="mobile-side-padding-20"><p style="Margin:0; padding:0; font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule:exactly; line-height:24px; color:#000000;text-align:left; letter-spacing:0.0em;"><span style="font-family: &quot;Segoe UI&quot;, Frutiger, &quot;Helvetica Neue&quot;, Arial, sans-serif;font-size: 16px;">${content}</span></p></td></tr></tbody></table>
-`;
-
-    const TEMPLATE_SEP = `
+        const RULE_2_SEP = `
+<!-- Begin Seperator -->
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
 <tbody><tr>
 <td bgcolor="#ffffff" style="padding-left:30px; padding-right:30px;" class="mobile-side-padding-20">
@@ -258,105 +135,143 @@
 </tbody></table>
 </td>
 </tr></tbody></table>
-`;
+<!-- End Seperator -->`;
 
-    // --- ACTIONS ---
-    function format(cmd, val=null) { document.execCommand(cmd, false, val); update(); }
-    function addLink() { const url=prompt("URL:"); if(url) format('createLink', url); }
-    function addImage() { const url=prompt("Image URL:"); if(url) { document.execCommand('insertHTML', false, `<br><img src="${url}" style="max-width:100%;"><br>`); update(); } }
-    
-    function switchTab(t, btn) {
-        document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
-        document.getElementById(t+'-tab').classList.add('active');
-        btn.classList.add('active');
-    }
+        // Editor Utilities
+        function cmd(type) {
+            document.execCommand(type, false, null);
+            editor.focus();
+        }
 
-    // --- SANITIZER ENGINE ---
-    function sanitizeAndBuild(rawHTML) {
-        // 1. Create a dummy element to manipulate DOM
-        const temp = document.createElement('div');
-        temp.innerHTML = rawHTML;
-
-        // 2. Iterate over ALL elements to strip styles, but preserve structural tags
-        const allElements = temp.querySelectorAll('*');
-        allElements.forEach(el => {
-            // Strip ALL style attributes (removes fonts, colors, sizes)
-            // Exception: Images need max-width usually, but let's stick to strict rules
-            if (el.tagName !== 'IMG') {
-                el.removeAttribute('style');
+        function makeLink() {
+            // Save the current selection range to prevent losing focus
+            const selection = window.getSelection();
+            if (!selection.rangeCount || selection.toString().trim() === "") {
+                alert("Please highlight the text you want to hyperlink first.");
+                return;
             }
             
-            // Remove Classes and IDs
-            el.removeAttribute('class');
-            el.removeAttribute('id');
-
-            // 3. ENFORCE Link Color
-            if (el.tagName === 'A') {
-                el.style.color = '#0067B8';
-                el.style.textDecoration = 'underline';
+            const range = selection.getRangeAt(0);
+            const url = prompt("Enter or paste the URL:", "https://");
+            
+            if (url) {
+                // Re-apply selection before execCommand
+                selection.removeAllRanges();
+                selection.addRange(range);
+                document.execCommand("createLink", false, url);
+                
+                // Immediately apply rule #3 color in the editor
+                const links = editor.getElementsByTagName('a');
+                for (let a of links) {
+                    a.style.color = "#0067B8";
+                    a.style.textDecoration = "underline";
+                }
             }
+        }
 
-            // 4. Flatten Headers (h1, h2, etc) to Strong + BR
-            if (['H1','H2','H3','H4','H5','H6'].includes(el.tagName)) {
-                const bold = document.createElement('strong');
-                bold.innerHTML = el.innerHTML;
-                const br = document.createElement('br');
-                el.parentNode.replaceChild(bold, el);
-                bold.after(br);
+        function clearAll() {
+            if (confirm("Reset everything?")) {
+                editor.innerHTML = "";
+                generate();
             }
+        }
+
+        // Paste Handling (Rule 1 Enforcement)
+        editor.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const html = e.clipboardData.getData('text/html') || e.clipboardData.getData('text/plain');
+            const sandbox = document.createElement('div');
+            sandbox.innerHTML = html;
+
+            // Remove all inline font styling
+            const all = sandbox.querySelectorAll('*');
+            all.forEach(el => {
+                el.removeAttribute('style');
+                el.removeAttribute('class');
+                el.removeAttribute('size');
+                el.removeAttribute('face');
+                el.removeAttribute('color');
+            });
+
+            document.execCommand('insertHTML', false, sandbox.innerHTML);
         });
 
-        // 5. Flatten structure (Convert P and Divs to BRs)
-        // This ensures it fits inside the single <p><span> template structure
-        let cleanHTML = temp.innerHTML;
-        cleanHTML = cleanHTML.replace(/<p[^>]*>/gi, '<br><br>').replace(/<\/p>/gi, '');
-        cleanHTML = cleanHTML.replace(/<div[^>]*>/gi, '<br>').replace(/<\/div>/gi, '');
-        
-        // Remove duplicate/leading BRs
-        cleanHTML = cleanHTML.replace(/^(<br\s*\/?>)+/i, '');
-        
-        return cleanHTML;
-    }
+        // Tab Controller
+        function switchTab(mode) {
+            const isPrev = mode === 'preview';
+            document.getElementById('view-preview').classList.toggle('hidden', !isPrev);
+            document.getElementById('view-code').classList.toggle('hidden', isPrev);
+            
+            document.getElementById('tab-p').className = isPrev ? "flex-1 py-3 text-xs font-black uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30" : "flex-1 py-3 text-xs font-black uppercase tracking-widest text-slate-400";
+            document.getElementById('tab-c').className = !isPrev ? "flex-1 py-3 text-xs font-black uppercase tracking-widest border-b-2 border-blue-600 text-blue-600 bg-blue-50/30" : "flex-1 py-3 text-xs font-black uppercase tracking-widest text-slate-400";
+            
+            if (!isPrev) generate();
+        }
 
-    // --- MAIN UPDATE LOOP ---
-    function update() {
-        const editor = document.getElementById('richEditor');
-        const pt = document.getElementById('paddingTop').value;
-        const pb = document.getElementById('paddingBottom').value;
-        const useSep = document.getElementById('sepCheck').checked;
+        // GENERATOR LOGIC
+        function generate() {
+            const container = document.createElement('div');
+            container.innerHTML = (editor.innerHTML === "Start typing or paste your text here...") ? "" : editor.innerHTML;
 
-        document.getElementById('ptVal').innerText = pt;
-        document.getElementById('pbVal').innerText = pb;
+            // 1. NORMALIZE SPACING
+            // Convert any structural gaps to tight margins
+            const elements = container.querySelectorAll('p, div, li, ul, ol');
+            elements.forEach(el => {
+                el.style.margin = "0";
+                el.style.padding = "0";
+                el.style.lineHeight = "24px";
+                el.style.fontFamily = "'Segoe UI', Verdana, sans-serif";
+                el.style.fontSize = "16px";
+                
+                // Add minor spacing only after paragraphs for readability
+                if (el.tagName === 'P' || el.tagName === 'DIV') {
+                    el.style.paddingBottom = "12px"; 
+                }
+                
+                if (el.tagName === 'LI') {
+                    el.style.paddingBottom = "4px";
+                }
+            });
 
-        let content = editor.innerHTML;
+            // 2. APPLY RULE 3 (Hyperlink Color)
+            const links = container.querySelectorAll('a');
+            links.forEach(a => {
+                a.style.color = "#0067B8";
+                a.style.textDecoration = "underline";
+            });
 
-        // Auto-Linkify text urls
-        content = content.replace(/(?<!href="|src=")(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>');
+            // 3. ASSEMBLE HTML
+            let coreContent = container.innerHTML;
+            
+            // Final check: If content ends with trailing empty tags, trim them to avoid extra bottom space
+            coreContent = coreContent.replace(/(<br>|<\/p>|<p>&nbsp;<\/p>)+$/, "");
 
-        // Sanitize
-        const strictContent = sanitizeAndBuild(content);
+            let result = RULE_1_TOP + coreContent + RULE_1_BOTTOM;
+            
+            if (sepToggle.checked) {
+                result += RULE_2_SEP;
+            }
 
-        // Build Final HTML
-        let finalCode = TEMPLATE_WRAPPER(pt, pb, strictContent);
-        if (useSep) finalCode += '\n' + TEMPLATE_SEP;
+            document.getElementById('code-box').value = result;
+            document.getElementById('render-target').innerHTML = result;
+        }
 
-        // Render
-        document.getElementById('visualPreview').innerHTML = finalCode;
-        document.getElementById('codeOutput').value = finalCode;
-    }
+        function copyToClipboard() {
+            const box = document.getElementById('code-box');
+            box.select();
+            document.execCommand('copy');
+            const btn = document.getElementById('copy-btn');
+            const old = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check text-green-500"></i> COPIED!';
+            setTimeout(() => btn.innerHTML = old, 2000);
+        }
 
-    function copyCode() {
-        document.getElementById('codeOutput').select();
-        document.execCommand('copy');
-        const btn = document.querySelector('.btn-copy');
-        btn.innerHTML = "Copied!";
-        setTimeout(()=> btn.innerHTML = '<i class="ph ph-copy"></i> Copy HTML', 2000);
-    }
-
-    // Init
-    update();
-</script>
-
+        // Init cleanup
+        editor.addEventListener('focus', () => {
+            if (editor.innerHTML.trim() === "Start typing or paste your text here...") {
+                editor.innerHTML = "";
+            }
+        });
+    </script>
 </body>
 </html>
