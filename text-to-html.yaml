@@ -1,0 +1,74 @@
+
+---
+
+## 🛠️ Usage
+
+1. Paste or type formatted text into the editor
+2. Use the toolbar to apply:
+   - Bold
+   - Italic
+   - Lists
+   - Links
+   - Images
+3. (Optional) Enable **Add separator**
+4. Click **Convert**
+5. Click **Copy HTML**
+6. Paste directly into your email template or CMS
+
+---
+
+## 📦 Output Structure
+
+The generated HTML always uses:
+
+- Fixed table-based wrapper
+- `Segoe UI`, 16px font
+- Inline styles only (email-safe)
+- Clean semantic tags
+
+No external CSS. No scripts. No hacks.
+
+---
+
+## 🧩 Tech Stack
+
+- Pure **HTML**
+- Vanilla **JavaScript**
+- Pure **CSS**
+- No frameworks
+- No dependencies
+
+---
+
+## 🔒 Compatibility
+
+- Gmail
+- Outlook (Windows & Web)
+- Apple Mail
+- Yahoo Mail
+- Marketing email platforms
+
+---
+
+## 📄 License
+
+MIT License  
+Free to use, modify, and distribute.
+
+---
+
+## 🤝 Contributing
+
+Suggestions and improvements are welcome.  
+Please keep changes:
+- minimal
+- email-safe
+- dependency-free
+
+---
+
+## 📌 Philosophy
+
+> Simple tools last longer.
+
+This project intentionally avoids complexity to ensure long-term reliability.
