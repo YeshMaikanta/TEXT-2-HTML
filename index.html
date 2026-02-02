@@ -17,6 +17,8 @@
     --output-text: #e5e7eb;
   }
 
+  * { box-sizing: border-box; }
+
   body {
     margin: 0;
     padding: 40px 20px;
@@ -178,7 +180,7 @@ editor.addEventListener("keydown", function(e){
   }
 });
 
-/* 🔥 EDGE + MVD SAFE PASTE */
+/* 🔥 EDGE + MVD SAFE PASTE + SPACE PRESERVATION */
 editor.addEventListener("paste", function (e) {
   e.preventDefault();
 
@@ -191,8 +193,10 @@ editor.addEventListener("paste", function (e) {
   content = content
     /* remove comments */
     .replace(/<!--[\s\S]*?-->/g,"")
-    /* remove NBSP / invisible spaces */
-    .replace(/\u00A0/g,"")
+    /* normalize nbsp to space */
+    .replace(/\u00A0/g," ")
+    /* preserve intentional multiple spaces */
+    .replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1))
     /* underline from styles */
     .replace(
       /<span[^>]*text-decoration\s*:\s*underline[^>]*>(.*?)<\/span>/gi,
@@ -235,7 +239,7 @@ line-height:24px;
 letter-spacing:normal;
 word-spacing:normal;
 word-break:break-all;
-white-space:normal;
+white-space:pre-wrap;
 padding:40px 30px;
 text-align:left;
 ">
