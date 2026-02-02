@@ -38,9 +38,7 @@
     margin-bottom: 20px;
   }
 
-  .title span {
-    color: var(--accent);
-  }
+  .title span { color: var(--accent); }
 
   .card {
     background: var(--card);
@@ -101,13 +99,8 @@
     cursor: pointer;
   }
 
-  .buttons button.secondary {
-    background: #020617;
-  }
-
-  .buttons button.copied {
-    background: #22c55e;
-  }
+  .buttons button.secondary { background: #020617; }
+  .buttons button.copied { background: #22c55e; }
 
   pre {
     margin-top: 28px;
@@ -132,6 +125,7 @@
       <button onclick="cmd('italic')"><i>I</i></button>
       <button onclick="cmd('underline')"><u>U</u></button>
       <button onclick="cmd('insertUnorderedList')">• List</button>
+      <button onclick="cmd('insertOrderedList')">1. List</button>
       <button onclick="addLink()">Link</button>
       <button onclick="addImage()">Image</button>
     </div>
@@ -170,7 +164,11 @@ function addImage(){
 }
 
 /* Keyboard shortcuts */
-editor.addEventListener("keydown", function(e){
+editor.addEventListener("keydown", e => {
+  if(e.ctrlKey && e.shiftKey && e.key === "7"){
+    e.preventDefault();
+    cmd("insertOrderedList");
+  }
   if(!e.ctrlKey) return;
   switch(e.key.toLowerCase()){
     case "b": e.preventDefault(); cmd("bold"); break;
@@ -180,50 +178,32 @@ editor.addEventListener("keydown", function(e){
   }
 });
 
-/* 🔥 EDGE + MVD SAFE PASTE + SPACE PRESERVATION */
-editor.addEventListener("paste", function (e) {
+/* 🔥 FIXED SPACE + MVD SAFE PASTE */
+editor.addEventListener("paste", e => {
   e.preventDefault();
 
   const cb = e.clipboardData || window.clipboardData;
-  const html = cb.getData("text/html");
-  const text = cb.getData("text/plain");
-
-  let content = html || text;
+  let content = cb.getData("text/html") || cb.getData("text/plain");
 
   content = content
-    /* remove comments */
     .replace(/<!--[\s\S]*?-->/g,"")
-    /* normalize nbsp to space */
     .replace(/\u00A0/g," ")
-    /* preserve intentional multiple spaces */
+    /* preserve ONLY intentional spacing */
     .replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1))
-    /* underline from styles */
-    .replace(
-      /<span[^>]*text-decoration\s*:\s*underline[^>]*>(.*?)<\/span>/gi,
-      "<u>$1</u>"
-    )
-    /* normalize tags */
+    .replace(/<span[^>]*text-decoration\s*:\s*underline[^>]*>(.*?)<\/span>/gi,"<u>$1</u>")
     .replace(/<b>/gi,"<strong>").replace(/<\/b>/gi,"</strong>")
     .replace(/<em>/gi,"<i>").replace(/<\/em>/gi,"</i>")
-    .replace(/<u>/gi,"<u>").replace(/<\/u>/gi,"</u>")
     .replace(/<span[^>]*font-weight\s*:\s*(bold|700)[^>]*>(.*?)<\/span>/gi,"<strong>$2</strong>");
 
   document.execCommand("insertHTML", false, content);
 });
 
-/* Convert to email-safe HTML */
 function convert(){
   let h = editor.innerHTML;
 
   h = h.replace(/<(\/?)(\w+)([^>]*)>/gi,(m,s,t,a)=>{
-    if(t==="a"){
-      const x=a.match(/href="[^"]*"/i);
-      return `<${s}${t} ${x?x[0]:""}>`;
-    }
-    if(t==="img"){
-      const x=a.match(/src="[^"]*"/i);
-      return `<img ${x?x[0]:""}>`;
-    }
+    if(t==="a"){const x=a.match(/href="[^"]*"/i); return `<${s}${t} ${x?x[0]:""}>`;}
+    if(t==="img"){const x=a.match(/src="[^"]*"/i); return `<img ${x?x[0]:""}>`;}
     return `<${s}${t}>`;
   }).replace(/<a /gi,'<a style="color:#0067B8;text-decoration:underline;" ');
 
