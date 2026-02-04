@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Text to HTML for Email</title>
+<title>Text to HTML - Strict Single Spacing</title>
 
 <style>
   /* --- TOOL UI --- */
@@ -65,46 +65,56 @@ function convert() {
   try {
     let h = editor.innerHTML;
 
-    // --- STEP 1: JUNK REMOVER ---
+    // --- STEP 1: JUNK & INVISIBLE CHAR KILLER ---
+    // Remove invisible "newline" characters that cause gaps in MVD
+    h = h.replace(/(\r\n|\n|\r)/gm, "");
+    
+    // Remove styles/classes
     h = h.replace(/ style="[^"]*"/gi, "");
     h = h.replace(/ class="[^"]*"/gi, "");
     h = h.replace(/<\/?span[^>]*>/gi, "");
 
-    // --- STEP 2: FIX STRUCTURE (Flatten blocks) ---
-    h = h.replace(/<div[^>]*>/gi, "<br>")
-         .replace(/<\/div>/gi, "")
-         .replace(/<p[^>]*>/gi, "")
-         .replace(/<\/p>/gi, "<br>")
-         .replace(/(<br\s*\/?>){3,}/gi, "<br><br>"); 
+    // --- STEP 2: LOGICAL FLATTENING (The Fix) ---
+    // Instead of replacing <div> with <br> (Start), we replace </div> with <br> (End)
+    // This ensures lines stack correctly without top-margin gaps.
+    
+    // 1. Convert closing tags to Breaks
+    h = h.replace(/<\/div>/gi, "<br>");
+    h = h.replace(/<\/p>/gi, "<br>");
+    
+    // 2. Remove opening tags completely (Clean start)
+    h = h.replace(/<div[^>]*>/gi, "");
+    h = h.replace(/<p[^>]*>/gi, "");
+    
+    // 3. Prevent Triple Breaks (Max 2 allowed)
+    h = h.replace(/(<br\s*\/?>){3,}/gi, "<br><br>"); 
+    
+    // 4. Remove Trailing Breaks at the very end of string
+    h = h.replace(/(<br\s*\/?>)+$/gi, "");
 
-    // --- STEP 3: MVD GAP KILLER (CRITICAL UPDATE) ---
-    // This removes any spaces or &nbsp; that sit immediately before a <br>
-    // Outlook hates " &nbsp;<br>", so we change it to just "<br>"
+    // --- STEP 3: MVD GAP KILLER ---
+    // Remove &nbsp; before <br> to prevent "Double Height" lines
     h = h.replace(/(&nbsp;| )+<br>/gi, "<br>");
-    h = h.replace(/(&nbsp;| )+$/gi, ""); // Remove trailing space at very end of text
 
-    // --- STEP 4: APPLY RULES ---
-    // Link Color
+    // --- STEP 4: FORMATTING & LINKS ---
     h = h.replace(/<a\s+[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, 
       '<a href="$1" style="color:#0067B8; text-decoration:underline;">$2</a>'
     );
-    
-    // Normalize INTERNAL spaces only (between words)
-    // We do this AFTER Step 3 so we don't accidentally create new trailing &nbsp;
     h = h.replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1));
 
-    // --- STEP 5: TEMPLATE ---
+    // --- STEP 5: THE STRICT TEMPLATE ---
+    // Added 'mso-line-height-rule: exactly' to force 24px height
     const mainTemplate = `
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
 <tbody><tr>
 <td bgcolor="#ffffff" align="center" class="mobile-side-padding-20"
- style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; line-height:24px; color:#000000; padding:40px 30px; text-align:left; letter-spacing:0.0em;">
+ style="font-family:'Segoe UI', SUWR, Verdana, sans-serif; font-size:16px; mso-line-height-rule: exactly; line-height:24px; color:#000000; padding:40px 30px; text-align:left; letter-spacing:0.0em;">
 ENTER YOUR CUSTOM TEXT HERE
 </td></tr></tbody></table> 
 `;
 
     const separatorTemplate = `
-<table border="0" cellpadding="0" cellspacing="0" width="100%"> <tbody><tr> <td bgcolor="#ffffff" style="padding:0 30px;" class="mobile-side-padding-20"> <table width="100%" cellspacing="0" cellpadding="0" border="0"> <tbody><tr> <td height="1" bgcolor="#ffffff" style="line-height:1px; font-size:1px; border-top:1px solid #A2A2A2;"></td> </tr> </tbody></table> </td> </tr></tbody></table> `;
+<table border="0" cellpadding="0" cellspacing="0" width="100%"> <tbody><tr> <td bgcolor="#ffffff" style="padding:0 30px;" class="mobile-side-padding-20"> <table width="100%" cellspacing="0" cellpadding="0" border="0"> <tbody><tr> <td height="1" bgcolor="#ffffff" style="line-height:1px; mso-line-height-rule: exactly; font-size:1px; border-top:1px solid #A2A2A2;"></td> </tr> </tbody></table> </td> </tr></tbody></table> `;
 
     let finalCode = mainTemplate.replace("ENTER YOUR CUSTOM TEXT HERE", h);
 
