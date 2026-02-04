@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Text to HTML Converter - Auto Clean</title>
+<title>Text to HTML for Email</title>
 
 <style>
   /* --- TOOL UI --- */
   :root { --bg: #eef2f7; --card: #ffffff; --border: #d6dbe4; --text: #1f2937; --accent: #5b7cfa; }
   body { margin: 0; padding: 40px 20px; font-family: "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
   .container { max-width: 960px; margin: 0 auto; }
+  
+  .page-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+  .page-header span { color: var(--accent); }
+
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
   .toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .toolbar button { border: 1px solid var(--border); background: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
@@ -24,6 +28,9 @@
 <body>
 
 <div class="container">
+  
+  <div class="page-header"><span>Text to HTML</span> for Email</div>
+
   <div class="card">
     <div class="toolbar">
       <button onclick="cmd('bold')"><b>B</b></button>
@@ -58,39 +65,35 @@ function convert() {
   try {
     let h = editor.innerHTML;
 
-    // --- STEP 1: THE "JUNK REMOVER" ---
-    // This strips all those nasty style="..." and class="..." attributes
-    // caused by pasting from other apps.
-    
-    // Remove all style="..." attributes
+    // --- STEP 1: JUNK REMOVER ---
     h = h.replace(/ style="[^"]*"/gi, "");
-    
-    // Remove all class="..." attributes
     h = h.replace(/ class="[^"]*"/gi, "");
-    
-    // Remove all <span> tags (but keep the text inside them)
     h = h.replace(/<\/?span[^>]*>/gi, "");
 
-    // --- STEP 2: FIX STRUCTURE ---
-    
-    // Flatten blocks (div/p) to simple Line Breaks <br>
+    // --- STEP 2: FIX STRUCTURE (Flatten blocks) ---
     h = h.replace(/<div[^>]*>/gi, "<br>")
          .replace(/<\/div>/gi, "")
          .replace(/<p[^>]*>/gi, "")
          .replace(/<\/p>/gi, "<br>")
-         .replace(/(<br\s*\/?>){3,}/gi, "<br><br>"); // Max 2 line breaks
+         .replace(/(<br\s*\/?>){3,}/gi, "<br><br>"); 
 
-    // --- STEP 3: APPLY OUR RULES ---
+    // --- STEP 3: MVD GAP KILLER (CRITICAL UPDATE) ---
+    // This removes any spaces or &nbsp; that sit immediately before a <br>
+    // Outlook hates " &nbsp;<br>", so we change it to just "<br>"
+    h = h.replace(/(&nbsp;| )+<br>/gi, "<br>");
+    h = h.replace(/(&nbsp;| )+$/gi, ""); // Remove trailing space at very end of text
 
-    // Add specific color to links (Since we stripped styles in Step 1, we add this back now)
+    // --- STEP 4: APPLY RULES ---
+    // Link Color
     h = h.replace(/<a\s+[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, 
       '<a href="$1" style="color:#0067B8; text-decoration:underline;">$2</a>'
     );
-
-    // Normalize spaces
+    
+    // Normalize INTERNAL spaces only (between words)
+    // We do this AFTER Step 3 so we don't accidentally create new trailing &nbsp;
     h = h.replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1));
 
-    // --- STEP 4: TEMPLATE ---
+    // --- STEP 5: TEMPLATE ---
     const mainTemplate = `
 <table width="100%" cellspacing="0" cellpadding="0" border="0">
 <tbody><tr>
