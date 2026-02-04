@@ -70,7 +70,7 @@
     background: var(--editor-bg);
     outline: none;
     font-size: 14px;
-    line-height: 1.7;
+    line-height: 1.6;
   }
 
   .editor:empty:before {
@@ -178,28 +178,28 @@ editor.addEventListener("keydown", e => {
   }
 });
 
-/* 🔥 FIXED SPACE + MVD SAFE PASTE */
+/* CLEAN PASTE (NO SPACE MANIPULATION) */
 editor.addEventListener("paste", e => {
   e.preventDefault();
-
   const cb = e.clipboardData || window.clipboardData;
   let content = cb.getData("text/html") || cb.getData("text/plain");
 
   content = content
     .replace(/<!--[\s\S]*?-->/g,"")
-    .replace(/\u00A0/g," ")
-    /* preserve ONLY intentional spacing */
-    .replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1))
     .replace(/<span[^>]*text-decoration\s*:\s*underline[^>]*>(.*?)<\/span>/gi,"<u>$1</u>")
     .replace(/<b>/gi,"<strong>").replace(/<\/b>/gi,"</strong>")
-    .replace(/<em>/gi,"<i>").replace(/<\/em>/gi,"</i>")
-    .replace(/<span[^>]*font-weight\s*:\s*(bold|700)[^>]*>(.*?)<\/span>/gi,"<strong>$2</strong>");
+    .replace(/<em>/gi,"<i>").replace(/<\/em>/gi,"</i>");
 
   document.execCommand("insertHTML", false, content);
 });
 
+/* OUTPUT NORMALIZATION */
+function normalizeSpaces(html){
+  return html.replace(/ {2,}/g, m => " " + "&nbsp;".repeat(m.length - 1));
+}
+
 function convert(){
-  let h = editor.innerHTML;
+  let h = normalizeSpaces(editor.innerHTML);
 
   h = h.replace(/<(\/?)(\w+)([^>]*)>/gi,(m,s,t,a)=>{
     if(t==="a"){const x=a.match(/href="[^"]*"/i); return `<${s}${t} ${x?x[0]:""}>`;}
@@ -216,10 +216,7 @@ style="
 font-family:'Segoe UI',Verdana,sans-serif;
 font-size:16px;
 line-height:24px;
-letter-spacing:normal;
-word-spacing:normal;
-word-break:break-all;
-white-space:pre-wrap;
+word-break:break-word;
 padding:40px 30px;
 text-align:left;
 ">
@@ -231,26 +228,7 @@ ${h}
 <!-- End custom text Section -->
 `;
 
-  const separatorBlock = `
-<!-- Begin Seperator -->
-<table width="100%" cellspacing="0" cellpadding="0" border="0">
-<tbody><tr>
-<td style="padding:0 30px;">
-<table width="100%" cellspacing="0" cellpadding="0" border="0">
-<tbody><tr>
-<td style="border-top:1px solid #A2A2A2;font-size:1px;line-height:1px;">&nbsp;</td>
-</tr></tbody></table>
-</td>
-</tr></tbody></table>
-<!-- End Seperator -->
-`;
-
-  let finalHTML = contentBlock;
-  if(document.getElementById("addSeparator").checked){
-    finalHTML += separatorBlock;
-  }
-
-  document.getElementById("output").textContent = finalHTML.trim();
+  document.getElementById("output").textContent = contentBlock.trim();
 }
 
 function copyHTML(){
